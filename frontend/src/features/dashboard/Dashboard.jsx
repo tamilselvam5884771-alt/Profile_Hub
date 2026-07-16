@@ -76,13 +76,13 @@ export default function Dashboard() {
   return (
     <div className="flex min-h-screen bg-[#021d1e] text-[#e2f1f1] overflow-hidden">
       {/* 1. Sidebar - Responsive (Drawer on Mobile, Collapsible on Tablet, Fixed on Desktop) */}
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} profileCompletion={profile?.completion ?? 0} />
 
       {/* 2. Main Content Area - Margins expand to offset the responsive Sidebar width */}
       <div className="flex flex-1 flex-col md:pl-20 lg:pl-72 transition-all duration-300 ease-in-out min-w-0">
         
         {/* Sticky Header Navbar */}
-        <Navbar onToggleSidebar={() => setIsSidebarOpen(true)} />
+        <Navbar onToggleSidebar={() => setIsSidebarOpen(true)} profile={profile} />
 
         <main className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
 

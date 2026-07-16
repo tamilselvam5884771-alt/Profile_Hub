@@ -4,9 +4,9 @@
  * @folder src/services/ - Handles database interaction, business rules, and validation logic, isolated from express.
  */
 
-const User = require('../models/User');
+const User = require('../models/user.model');
 const { generateToken } = require('../utils/tokenUtils');
-const { AppError } = require('../middleware/errorMiddleware');
+const { AppError } = require('../middleware/error.middleware');
 
 /**
  * Registers a new user account.

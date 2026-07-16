@@ -11,9 +11,9 @@ const dotenv = require('dotenv');
 // Load environment variables if not loaded at the root level
 dotenv.config();
 
-const authRoutes = require('./routes/authRoutes');
+const authRoutes = require('./routes/auth.routes');
 const profileRoutes = require('./routes/profile.routes');
-const { errorHandler, AppError } = require('./middleware/errorMiddleware');
+const { errorHandler, AppError } = require('./middleware/error.middleware');
 
 const app = express();
 

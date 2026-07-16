@@ -8,8 +8,9 @@ const express = require('express');
 const router = express.Router();
 
 const profileController = require('../controllers/profile.controller');
-const { protect } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/auth.middleware');
 const { validateProfile, validateUsernameParam } = require('../validators/profile.validator');
+const { handleUpload } = require('../middleware/uploadMiddleware');
 
 // 1. Private Route: Create a new profile
 router.post('/', protect, validateProfile, profileController.createProfile);
@@ -23,7 +24,13 @@ router.put('/me', protect, validateProfile, profileController.updateProfile);
 // 4. Private Route: Delete current user's profile
 router.delete('/me', protect, profileController.deleteProfile);
 
-// 5. Public Route: Fetch any user's profile by username
+// 5. Private Route: Upload profile avatar
+router.post('/avatar', protect, handleUpload, profileController.uploadAvatar);
+
+// 6. Private Route: Delete profile avatar
+router.delete('/avatar', protect, profileController.deleteAvatar);
+
+// 7. Public Route: Fetch any user's profile by username
 router.get('/:username', validateUsernameParam, profileController.getPublicProfile);
 
 module.exports = router;

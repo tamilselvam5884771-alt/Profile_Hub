@@ -39,6 +39,19 @@ export const AuthProvider = ({ children }) => {
     restoreSession();
   }, []);
 
+  // Listen to global auth-unauthorized event from Axios interceptors
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setToken(null);
+    };
+
+    window.addEventListener('auth-unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('auth-unauthorized', handleUnauthorized);
+    };
+  }, []);
+
   /**
    * Log in user
    * @param {Object} credentials - { email, username, password }

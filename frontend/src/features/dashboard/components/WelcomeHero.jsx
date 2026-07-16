@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -150,10 +151,13 @@ export default function WelcomeHero({ profile, loading = false }) {
 
           {/* CTA Action Button */}
           {!isComplete && (
-            <button className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#011414] font-bold text-sm shadow-lg shadow-amber-950/20 active:scale-95 transition-all duration-200 group">
+            <Link 
+              to="/profile" 
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#011414] font-bold text-sm shadow-lg shadow-amber-950/20 active:scale-95 transition-all duration-200 group"
+            >
               Continue Building
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
           )}
         </motion.div>
       </div>

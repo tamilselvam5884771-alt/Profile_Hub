@@ -5,8 +5,9 @@
  */
 
 const Profile = require('../models/profile.model');
-const User = require('../models/User');
-const { AppError } = require('../middleware/errorMiddleware');
+const User = require('../models/user.model');
+const { AppError } = require('../middleware/error.middleware');
+const cloudinary = require('../config/cloudinary');
 
 /**
  * Creates a new profile for a user.
@@ -100,10 +101,102 @@ const deleteProfileByUserId = async (userId) => {
   return deletedProfile;
 };
 
+/**
+ * Helper to upload buffer stream to Cloudinary
+ */
+const uploadToCloudinary = (fileBuffer, options) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    });
+    stream.end(fileBuffer);
+  });
+};
+
+/**
+ * Uploads a profile avatar image to Cloudinary and updates profile references.
+ * If an old avatar exists, deletes it from Cloudinary first.
+ * @param {string} userId - User reference ObjectId
+ * @param {Buffer} fileBuffer - Multer memory file buffer
+ * @returns {Promise<Object>} The updated Profile document
+ */
+const uploadAvatar = async (userId, fileBuffer) => {
+  // 1. Find profile first (profile must exist before uploading avatar)
+  const profile = await Profile.findOne({ userId });
+  if (!profile) {
+    throw new AppError('Profile not found. Please create a profile first.', 404);
+  }
+
+  // 2. If an old avatar exists, delete it from Cloudinary
+  if (profile.avatarPublicId) {
+    try {
+      await cloudinary.uploader.destroy(profile.avatarPublicId);
+    } catch (destroyError) {
+      console.error('[Cloudinary] Failed to delete old avatar:', destroyError);
+      // Continue anyway to avoid blocking upload of the new avatar
+    }
+  }
+
+  // 3. Upload new avatar buffer to Cloudinary
+  let uploadResult;
+  try {
+    uploadResult = await uploadToCloudinary(fileBuffer, {
+      folder: 'ProfileHub/avatars',
+      transformation: [
+        { width: 300, height: 300, crop: 'fill', gravity: 'face' } // Standardize profile images
+      ]
+    });
+  } catch (uploadError) {
+    console.error('[Cloudinary] Upload failed:', uploadError);
+    throw new AppError('Failed to upload image to cloud storage.', 500);
+  }
+
+  // 4. Save to database
+  profile.avatarUrl = uploadResult.secure_url;
+  profile.avatarPublicId = uploadResult.public_id;
+  profile.profileImage = uploadResult.secure_url; // Map to legacy field to ensure compatibility
+  await profile.save();
+
+  return profile;
+};
+
+/**
+ * Removes the avatar photo of the user. Deletes the asset from Cloudinary and clears DB fields.
+ * @param {string} userId - User reference ObjectId
+ * @returns {Promise<Object>} The updated Profile document
+ */
+const deleteAvatar = async (userId) => {
+  const profile = await Profile.findOne({ userId });
+  if (!profile) {
+    throw new AppError('Profile not found.', 404);
+  }
+
+  // Delete from Cloudinary if public ID exists
+  if (profile.avatarPublicId) {
+    try {
+      await cloudinary.uploader.destroy(profile.avatarPublicId);
+    } catch (destroyError) {
+      console.error('[Cloudinary] Failed to delete avatar asset:', destroyError);
+      throw new AppError('Failed to remove image from cloud storage.', 500);
+    }
+  }
+
+  // Clear DB fields
+  profile.avatarUrl = '';
+  profile.avatarPublicId = '';
+  profile.profileImage = '';
+  await profile.save();
+
+  return profile;
+};
+
 module.exports = {
   createProfile,
   getProfileByUserId,
   updateProfileByUserId,
   getProfileByUsername,
   deleteProfileByUserId,
+  uploadAvatar,
+  deleteAvatar,
 };

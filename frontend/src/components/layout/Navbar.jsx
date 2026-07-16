@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Menu,
   Search,
@@ -10,6 +11,7 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react';
+import useAuth from '../../hooks/useAuth';
 
 /**
  * Navbar Component
@@ -20,15 +22,31 @@ import {
  */
 export default function Navbar({
   onToggleSidebar,
+  profile = null,
   currentUser = {
     name: 'Alex Morgan',
     role: 'Full Stack Developer',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop',
   },
 }) {
+  const { user: authUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [isDark, setIsDark] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [hasNotifications, setHasNotifications] = useState(true);
+
+  const displayName = authUser?.name || currentUser.name;
+  const displayRole = authUser?.username ? `@${authUser.username}` : currentUser.role;
+  const avatarUrl = profile?.avatarUrl || profile?.profileImage;
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  };
+
+  const initials = getInitials(displayName);
   
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
@@ -74,7 +92,7 @@ export default function Navbar({
         {/* Small greeting or segment (Visible on desktop) */}
         <div className="hidden lg:block">
           <h1 className="text-sm font-medium text-[#7da3a3]">Welcome back,</h1>
-          <p className="text-base font-bold text-[#e2f1f1]">{currentUser.name}</p>
+          <p className="text-base font-bold text-[#e2f1f1]">{displayName}</p>
         </div>
       </div>
 
@@ -133,20 +151,26 @@ export default function Navbar({
             aria-haspopup="menu"
             aria-label="Open User Menu Account Settings"
           >
-            {/* User Avatar */}
-            <img
-              src={currentUser.avatar}
-              alt={`${currentUser.name}'s Profile Avatar`}
-              className="h-9 w-9 rounded-lg object-cover ring-2 ring-emerald-500/40"
-            />
+            {/* User Avatar or Initials Fallback */}
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={`${displayName}'s Profile Avatar`}
+                className="h-9 w-9 rounded-lg object-cover ring-2 ring-emerald-500/40"
+              />
+            ) : (
+              <div className="h-9 w-9 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 text-teal-950 font-bold flex items-center justify-center text-xs ring-2 ring-emerald-500/40 select-none">
+                {initials}
+              </div>
+            )}
             
             {/* User Details (Hidden on tiny screens) */}
             <div className="hidden sm:block text-left">
               <div className="text-sm font-bold text-[#e2f1f1] flex items-center gap-1">
-                {currentUser.name}
+                {displayName}
                 <ChevronDown size={14} className={`text-[#7da3a3] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </div>
-              <div className="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">{currentUser.role}</div>
+              <div className="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">{displayRole}</div>
             </div>
           </button>
 
@@ -161,13 +185,16 @@ export default function Navbar({
             >
               {/* Header profile info (mobile preview) */}
               <div className="block sm:hidden px-3 py-2 border-b border-[#083030]/50 mb-1">
-                <div className="text-sm font-bold text-[#e2f1f1]">{currentUser.name}</div>
-                <div className="text-[10px] text-emerald-400 font-semibold uppercase">{currentUser.role}</div>
+                <div className="text-sm font-bold text-[#e2f1f1]">{displayName}</div>
+                <div className="text-[10px] text-emerald-400 font-semibold uppercase">{displayRole}</div>
               </div>
 
               {/* Menu Item: My Profile */}
               <button
-                onClick={() => setIsDropdownOpen(false)}
+                onClick={() => {
+                  setIsDropdownOpen(false);
+                  navigate('/profile');
+                }}
                 className="flex w-full items-center gap-3 px-3 py-2.5 text-sm rounded-xl text-[#94b3b3] hover:text-[#f3fbfb] hover:bg-[#032e2e]/50 transition-colors"
                 role="menuitem"
               >
@@ -190,7 +217,10 @@ export default function Navbar({
 
               {/* Menu Item: Logout */}
               <button
-                onClick={() => setIsDropdownOpen(false)}
+                onClick={() => {
+                  setIsDropdownOpen(false);
+                  logout();
+                }}
                 className="flex w-full items-center gap-3 px-3 py-2.5 text-sm rounded-xl text-red-400 hover:text-red-300 hover:bg-red-950/20 transition-colors"
                 role="menuitem"
               >

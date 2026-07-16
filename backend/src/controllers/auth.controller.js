@@ -4,7 +4,7 @@
  * @folder src/controllers/ - Interfacing layer mapping API endpoints to business logic results and managing HTTP response structures.
  */
 
-const authService = require('../services/authService');
+const authService = require('../services/auth.service');
 
 /**
  * Async utility wrapper to forward rejected promises (async errors) to Express global error handler.

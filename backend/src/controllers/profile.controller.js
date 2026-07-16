@@ -87,10 +87,49 @@ const deleteProfile = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Upload profile avatar
+ * @route   POST /api/profile/avatar
+ * @access  Private (Requires authenticated user)
+ */
+const uploadAvatar = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide an image file to upload.',
+    });
+  }
+
+  const result = await profileService.uploadAvatar(req.user._id, req.file.buffer);
+
+  res.status(200).json({
+    success: true,
+    message: 'Avatar uploaded successfully.',
+    data: result,
+  });
+});
+
+/**
+ * @desc    Delete profile avatar
+ * @route   DELETE /api/profile/avatar
+ * @access  Private (Requires authenticated user)
+ */
+const deleteAvatar = asyncHandler(async (req, res) => {
+  const result = await profileService.deleteAvatar(req.user._id);
+
+  res.status(200).json({
+    success: true,
+    message: 'Avatar removed successfully.',
+    data: result,
+  });
+});
+
 module.exports = {
   createProfile,
   getMyProfile,
   updateProfile,
   getPublicProfile,
   deleteProfile,
+  uploadAvatar,
+  deleteAvatar,
 };

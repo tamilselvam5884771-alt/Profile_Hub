@@ -128,6 +128,16 @@ const profileSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    avatarUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    avatarPublicId: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     // Social Links (Embedded flat key-value pairs)
     linkedin: {
       type: String,

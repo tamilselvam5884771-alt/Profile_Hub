@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   User,
@@ -218,9 +218,12 @@ export default function Sidebar({ isOpen, onClose, profileCompletion = 70 }) {
               <div className="absolute left-20 bottom-2 z-50 scale-0 group-hover:scale-100 p-4 rounded-xl bg-[#022424] border border-[#084848] text-xs shadow-xl shadow-black/60 transition-all duration-150 origin-bottom-left w-48">
                 <div className="font-semibold text-[#e2f1f1] mb-1">Profile Strength</div>
                 <div className="text-amber-400 font-bold mb-2">{profileCompletion}% Completed</div>
-                <button className="w-full py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#011414] font-bold text-[10px] transition-all">
+                <Link 
+                  to="/profile" 
+                  className="block w-full text-center py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#011414] font-bold text-[10px] transition-all"
+                >
                   Complete Profile
-                </button>
+                </Link>
               </div>
             </div>
           ) : (
@@ -272,9 +275,12 @@ export default function Sidebar({ isOpen, onClose, profileCompletion = 70 }) {
               </div>
 
               {/* Action Call-to-action button */}
-              <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#011414] font-bold text-xs shadow-md shadow-amber-950/20 hover:shadow-amber-500/10 active:scale-95 transition-all duration-200">
+              <Link 
+                to="/profile" 
+                className="block w-full text-center py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-[#011414] font-bold text-xs shadow-md shadow-amber-950/20 hover:shadow-amber-500/10 active:scale-95 transition-all duration-200"
+              >
                 Complete Profile
-              </button>
+              </Link>
             </div>
           )}
         </div>
