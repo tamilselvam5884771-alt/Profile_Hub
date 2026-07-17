@@ -91,20 +91,21 @@ const validateProfile = (req, res, next) => {
     } else {
       const skillNames = new Set();
       skills.forEach((skill, index) => {
-        if (!skill.name || skill.name.trim() === '') {
+        const nameVal = skill.skillName || skill.name;
+        if (!nameVal || nameVal.trim() === '') {
           errors.push(`Skill name at index ${index} is required`);
         } else {
-          const lowerName = skill.name.trim().toLowerCase();
+          const lowerName = nameVal.trim().toLowerCase();
           if (skillNames.has(lowerName)) {
-            errors.push(`Duplicate skill name found: '${skill.name.trim()}'`);
+            errors.push(`Duplicate skill name found: '${nameVal.trim()}'`);
           }
           skillNames.add(lowerName);
         }
 
         if (!skill.level || skill.level.trim() === '') {
-          errors.push(`Skill level for '${skill.name || index}' is required`);
-        } else if (!['Beginner', 'Intermediate', 'Expert'].includes(skill.level.trim())) {
-          errors.push(`Invalid skill level for '${skill.name || index}'. Must be Beginner, Intermediate, or Expert`);
+          errors.push(`Skill level for '${nameVal || index}' is required`);
+        } else if (!['Beginner', 'Intermediate', 'Advanced', 'Expert'].includes(skill.level.trim())) {
+          errors.push(`Invalid skill level for '${nameVal || index}'. Must be Beginner, Intermediate, Advanced, or Expert`);
         }
       });
     }
@@ -131,12 +132,14 @@ const validateProfile = (req, res, next) => {
           errors.push(`Project description for '${proj.title || index}' is required`);
         }
 
-        if (proj.githubLink && !isValidURL(proj.githubLink)) {
-          errors.push(`GitHub Link for project '${proj.title || index}' must be a valid URL`);
+        const gitUrl = proj.githubUrl || proj.githubLink;
+        if (gitUrl && !isValidURL(gitUrl)) {
+          errors.push(`GitHub URL for project '${proj.title || index}' must be a valid URL`);
         }
 
-        if (proj.liveDemo && !isValidURL(proj.liveDemo)) {
-          errors.push(`Live Demo link for project '${proj.title || index}' must be a valid URL`);
+        const demoUrl = proj.liveDemoUrl || proj.liveDemo;
+        if (demoUrl && !isValidURL(demoUrl)) {
+          errors.push(`Live Demo URL for project '${proj.title || index}' must be a valid URL`);
         }
       });
     }
@@ -208,7 +211,169 @@ const validateUsernameParam = (req, res, next) => {
   next();
 };
 
+const SKILL_CATEGORIES = [
+  'Programming Language',
+  'Frontend',
+  'Backend',
+  'Database',
+  'Cloud',
+  'DevOps',
+  'AI / Machine Learning',
+  'Mobile',
+  'Tools',
+  'Soft Skills',
+  'Other',
+];
+
+const SKILL_LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+
+/**
+ * Validates the request body for POST /me/skills and PUT /me/skills/:skillId.
+ * Checks required fields, allowed enums, and numeric experience values.
+ */
+const validateSkill = (req, res, next) => {
+  const errors = [];
+  const { skillName, category, level, experience } = req.body;
+
+  // 1. skillName — required, must not be empty after trimming
+  if (!skillName || String(skillName).trim() === '') {
+    errors.push('Skill name is required');
+  }
+
+  // 2. category — required and must be one of the allowed values
+  if (!category || String(category).trim() === '') {
+    errors.push('Skill category is required');
+  } else if (!SKILL_CATEGORIES.includes(category.trim())) {
+    errors.push(`Invalid category. Allowed: ${SKILL_CATEGORIES.join(', ')}`);
+  }
+
+  // 3. level — required and must be one of the allowed values
+  if (!level || String(level).trim() === '') {
+    errors.push('Skill level is required');
+  } else if (!SKILL_LEVELS.includes(level.trim())) {
+    errors.push(`Invalid level. Allowed: ${SKILL_LEVELS.join(', ')}`);
+  }
+
+  // 4. experience — optional block; if provided, validate fields
+  if (experience !== undefined) {
+    const { value, unit } = experience;
+
+    if (value !== undefined && value !== null && value !== '') {
+      const numVal = Number(value);
+      if (isNaN(numVal) || numVal < 0) {
+        errors.push('Experience value must be a non-negative number');
+      }
+    }
+
+    if (unit !== undefined && unit !== null && unit !== '') {
+      if (!['Months', 'Years'].includes(unit)) {
+        errors.push('Experience unit must be either Months or Years');
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors,
+    });
+  }
+
+  next();
+};
+
+const PROJECT_CATEGORIES = [
+  'Web Application',
+  'Mobile Application',
+  'Desktop Application',
+  'AI / Machine Learning',
+  'Data Science',
+  'IoT',
+  'Blockchain',
+  'Open Source',
+  'College Project',
+  'Hackathon',
+  'Other',
+];
+
+const PROJECT_STATUSES = ['Planning', 'In Progress', 'Completed', 'Archived'];
+
+/**
+ * Validates request payload for POST /me/projects and PUT /me/projects/:projectId
+ */
+const validateProject = (req, res, next) => {
+  const errors = [];
+  const {
+    title,
+    description,
+    category,
+    status,
+    githubUrl,
+    liveDemoUrl,
+    thumbnailUrl,
+    techStack,
+    achievements,
+  } = req.body;
+
+  // 1. Title
+  if (!title || String(title).trim() === '') {
+    errors.push('Project title is required');
+  }
+
+  // 2. Description
+  if (!description || String(description).trim() === '') {
+    errors.push('Project description is required');
+  }
+
+  // 3. Category
+  if (!category || String(category).trim() === '') {
+    errors.push('Project category is required');
+  } else if (!PROJECT_CATEGORIES.includes(category.trim())) {
+    errors.push(`Invalid category. Allowed: ${PROJECT_CATEGORIES.join(', ')}`);
+  }
+
+  // 4. Status
+  if (!status || String(status).trim() === '') {
+    errors.push('Project status is required');
+  } else if (!PROJECT_STATUSES.includes(status.trim())) {
+    errors.push(`Invalid status. Allowed: ${PROJECT_STATUSES.join(', ')}`);
+  }
+
+  // 5. URLs
+  if (githubUrl && !isValidURL(githubUrl)) {
+    errors.push('GitHub URL must be a valid URL starting with http:// or https://');
+  }
+  if (liveDemoUrl && !isValidURL(liveDemoUrl)) {
+    errors.push('Live Demo URL must be a valid URL starting with http:// or https://');
+  }
+  if (thumbnailUrl && !isValidURL(thumbnailUrl)) {
+    errors.push('Thumbnail URL must be a valid URL starting with http:// or https://');
+  }
+
+  // 6. Arrays
+  if (techStack !== undefined && !Array.isArray(techStack)) {
+    errors.push('Tech Stack must be an array of strings');
+  }
+  if (achievements !== undefined && !Array.isArray(achievements)) {
+    errors.push('Achievements must be an array of strings');
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors,
+    });
+  }
+
+  next();
+};
+
 module.exports = {
   validateProfile,
   validateUsernameParam,
+  validateSkill,
+  validateProject,
 };
+

@@ -9,25 +9,73 @@ const mongoose = require('mongoose');
 /**
  * Nested schema for Skills.
  * Embedded directly inside Profile to avoid extra collection overhead and lookup operations.
+ * Each skill gets its own _id so it can be individually updated and deleted.
  */
 const skillSchema = new mongoose.Schema(
   {
-    name: {
+    skillName: {
       type: String,
       required: [true, 'Skill name is required'],
       trim: true,
+    },
+    category: {
+      type: String,
+      required: [true, 'Skill category is required'],
+      trim: true,
+      enum: {
+        values: [
+          'Programming Language',
+          'Frontend',
+          'Backend',
+          'Database',
+          'Cloud',
+          'DevOps',
+          'AI / Machine Learning',
+          'Mobile',
+          'Tools',
+          'Soft Skills',
+          'Other',
+        ],
+        message: 'Invalid skill category',
+      },
     },
     level: {
       type: String,
       required: [true, 'Skill level is required'],
       trim: true,
       enum: {
-        values: ['Beginner', 'Intermediate', 'Expert'],
-        message: 'Skill level must be either Beginner, Intermediate, or Expert',
+        values: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
+        message: 'Skill level must be Beginner, Intermediate, Advanced, or Expert',
       },
     },
+    experience: {
+      value: {
+        type: Number,
+        min: [0, 'Experience value cannot be negative'],
+        default: null,
+      },
+      unit: {
+        type: String,
+        enum: {
+          values: ['Months', 'Years'],
+          message: 'Experience unit must be Months or Years',
+        },
+        default: null,
+      },
+    },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    source: {
+      type: String,
+      trim: true,
+      default: 'Manual',
+    },
   },
-  { _id: false } // Disable _id generation for nested subdocuments to save space and avoid clutter
+  {
+    timestamps: true, // Adds createdAt + updatedAt per skill subdocument
+  }
 );
 
 /**
@@ -41,31 +89,90 @@ const projectSchema = new mongoose.Schema(
       required: [true, 'Project title is required'],
       trim: true,
     },
+    tagline: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     description: {
       type: String,
       required: [true, 'Project description is required'],
       trim: true,
     },
-    technologies: {
+    techStack: {
       type: [String],
       default: [],
     },
-    githubLink: {
+    category: {
       type: String,
+      required: [true, 'Project category is required'],
       trim: true,
+      enum: {
+        values: [
+          'Web Application',
+          'Mobile Application',
+          'Desktop Application',
+          'AI / Machine Learning',
+          'Data Science',
+          'IoT',
+          'Blockchain',
+          'Open Source',
+          'College Project',
+          'Hackathon',
+          'Other',
+        ],
+        message: 'Invalid project category',
+      },
     },
-    liveDemo: {
+    status: {
+      type: String,
+      required: [true, 'Project status is required'],
+      trim: true,
+      enum: {
+        values: ['Planning', 'In Progress', 'Completed', 'Archived'],
+        message: 'Invalid project status',
+      },
+    },
+    githubUrl: {
       type: String,
       trim: true,
+      default: '',
+    },
+    liveDemoUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    thumbnailUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    thumbnailPublicId: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    featured: {
+      type: Boolean,
+      default: false,
     },
     startDate: {
       type: Date,
+      default: null,
     },
     endDate: {
       type: Date,
+      default: null,
+    },
+    achievements: {
+      type: [String],
+      default: [],
     },
   },
-  { _id: false }
+  {
+    timestamps: true, // Auto-manages createdAt and updatedAt for each project subdocument
+  }
 );
 
 /**

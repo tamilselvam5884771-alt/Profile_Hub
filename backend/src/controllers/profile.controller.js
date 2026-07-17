@@ -124,6 +124,146 @@ const deleteAvatar = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Get all skills for the current user
+ * @route   GET /api/profile/me/skills
+ * @access  Private
+ */
+const getSkills = asyncHandler(async (req, res) => {
+  const result = await profileService.getSkills(req.user._id);
+
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+});
+
+/**
+ * @desc    Add a new skill to the current user's profile
+ * @route   POST /api/profile/me/skills
+ * @access  Private
+ */
+const addSkill = asyncHandler(async (req, res) => {
+  const result = await profileService.addSkill(req.user._id, req.body);
+
+  res.status(201).json({
+    success: true,
+    message: 'Skill added successfully.',
+    data: result,
+  });
+});
+
+/**
+ * @desc    Update an existing skill by ID
+ * @route   PUT /api/profile/me/skills/:skillId
+ * @access  Private
+ */
+const updateSkill = asyncHandler(async (req, res) => {
+  const result = await profileService.updateSkill(req.user._id, req.params.skillId, req.body);
+
+  res.status(200).json({
+    success: true,
+    message: 'Skill updated successfully.',
+    data: result,
+  });
+});
+
+/**
+ * @desc    Delete a skill by ID
+ * @route   DELETE /api/profile/me/skills/:skillId
+ * @access  Private
+ */
+const deleteSkill = asyncHandler(async (req, res) => {
+  const result = await profileService.deleteSkill(req.user._id, req.params.skillId);
+
+  res.status(200).json({
+    success: true,
+    message: 'Skill deleted successfully.',
+    data: result,
+  });
+});
+
+/**
+ * @desc    Get all projects for the current user
+ * @route   GET /api/profile/me/projects
+ * @access  Private
+ */
+const getProjects = asyncHandler(async (req, res) => {
+  const result = await profileService.getProjects(req.user._id);
+
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+});
+
+/**
+ * @desc    Add a new project to current user's profile
+ * @route   POST /api/profile/me/projects
+ * @access  Private
+ */
+const addProject = asyncHandler(async (req, res) => {
+  const result = await profileService.addProject(req.user._id, req.body);
+
+  res.status(201).json({
+    success: true,
+    message: 'Project added successfully.',
+    data: result,
+  });
+});
+
+/**
+ * @desc    Update a project by ID
+ * @route   PUT /api/profile/me/projects/:projectId
+ * @access  Private
+ */
+const updateProject = asyncHandler(async (req, res) => {
+  const result = await profileService.updateProject(req.user._id, req.params.projectId, req.body);
+
+  res.status(200).json({
+    success: true,
+    message: 'Project updated successfully.',
+    data: result,
+  });
+});
+
+/**
+ * @desc    Delete a project by ID
+ * @route   DELETE /api/profile/me/projects/:projectId
+ * @access  Private
+ */
+const deleteProject = asyncHandler(async (req, res) => {
+  const result = await profileService.deleteProject(req.user._id, req.params.projectId);
+
+  res.status(200).json({
+    success: true,
+    message: 'Project deleted successfully.',
+    data: result,
+  });
+});
+
+/**
+ * @desc    Upload project thumbnail
+ * @route   POST /api/profile/me/projects/thumbnail
+ * @access  Private
+ */
+const uploadProjectThumbnail = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide an image file to upload.',
+    });
+  }
+
+  const result = await profileService.uploadProjectThumbnail(req.user._id, req.file.buffer);
+
+  res.status(200).json({
+    success: true,
+    message: 'Thumbnail uploaded successfully.',
+    data: result,
+  });
+});
+
 module.exports = {
   createProfile,
   getMyProfile,
@@ -132,4 +272,13 @@ module.exports = {
   deleteProfile,
   uploadAvatar,
   deleteAvatar,
+  getSkills,
+  addSkill,
+  updateSkill,
+  deleteSkill,
+  getProjects,
+  addProject,
+  updateProject,
+  deleteProject,
+  uploadProjectThumbnail,
 };

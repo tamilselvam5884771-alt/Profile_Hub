@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -11,7 +11,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Mail,
-  Compass,
+  Code2,
   ArrowRight,
   Lock,
   Camera,
@@ -22,6 +22,8 @@ import useAuth from '../../../hooks/useAuth';
 import profileService from '../../../services/profileService';
 import Sidebar from '../../../components/layout/Sidebar';
 import Navbar from '../../../components/layout/Navbar';
+import SkillsSection from './skills/SkillsSection';
+import ProjectsSection from './projects/ProjectsSection';
 
 /**
  * Derives a profile completion percentage from populated profile fields.
@@ -224,6 +226,20 @@ export default function ProfilePage() {
     return Object.keys(errors).length === 0;
   };
 
+  /**
+   * Called by SkillsSection after any CRUD operation.
+   * Merges the updated skills array back into local profile state so that
+   * completion % and Navbar data stay in sync without a full page reload.
+   */
+  const handleSkillsChange = useCallback((updatedSkills) => {
+    setProfile((prev) => prev ? { ...prev, skills: updatedSkills } : prev);
+  }, []);
+
+  /** Propagates project mutations back to local profile state so Dashboard stats stay in sync. */
+  const handleProjectsChange = useCallback((updatedProjects) => {
+    setProfile((prev) => prev ? { ...prev, projects: updatedProjects } : prev);
+  }, []);
+
   const handleSave = async (redirectAfterSave = false) => {
     setApiError(null);
     setSuccessMessage(null);
@@ -249,6 +265,7 @@ export default function ProfilePage() {
       }
 
       if (result && result.success) {
+        setProfile(result.data);
         setSuccessMessage('Profile saved successfully.');
         setTimeout(() => setSuccessMessage(null), 3000);
 
@@ -268,38 +285,11 @@ export default function ProfilePage() {
     return false;
   };
 
-  // Skeleton UI for loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#021d1e] text-[#e2f1f1] flex items-center justify-center p-6">
-        <div className="w-full max-w-5xl space-y-8 animate-pulse">
-          <div className="flex items-center justify-between pb-6 border-b border-[#083030]/60">
-            <div className="space-y-3">
-              <div className="h-4 w-32 bg-[#032e2e] rounded" />
-              <div className="h-8 w-64 bg-[#032e2e] rounded" />
-            </div>
-            <div className="h-10 w-28 bg-[#032e2e] rounded-xl" />
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-1 space-y-3">
-              <div className="h-12 bg-[#032e2e] rounded-xl" />
-              <div className="h-12 bg-[#032e2e] rounded-xl" />
-            </div>
-            <div className="lg:col-span-3 p-8 rounded-3xl border border-[#083535] bg-[#011414]/50 space-y-6">
-              <div className="h-24 w-24 bg-[#032e2e] rounded-full mx-auto" />
-              <div className="h-6 w-48 bg-[#032e2e] rounded mx-auto" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const tabItems = [
-    { id: 'basic', name: 'Basic Info', icon: User, locked: false },
-    { id: 'skills', name: 'Skills', icon: Compass, locked: true },
-    { id: 'projects', name: 'Projects', icon: Briefcase, locked: true },
-    { id: 'certifications', name: 'Certifications', icon: CheckCircle, locked: true },
+    { id: 'basic',          name: 'Basic Info',      icon: User,        locked: loading },
+    { id: 'skills',         name: 'Skills',          icon: Code2,       locked: loading || isNewProfile },
+    { id: 'projects',       name: 'Projects',        icon: Briefcase,   locked: loading || isNewProfile },
+    { id: 'certifications', name: 'Certifications',  icon: CheckCircle, locked: true },
   ];
 
   const avatarUrl = localPreviewUrl || profile?.avatarUrl || profile?.profileImage;
@@ -408,9 +398,57 @@ export default function ProfilePage() {
             {/* RIGHT Column: Profile Forms */}
             <div className="lg:col-span-3 p-6 sm:p-8 rounded-3xl border border-[#083535] bg-gradient-to-br from-[#011414] via-[#011b1b] to-[#010909] shadow-xl relative overflow-hidden space-y-8">
               
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-2xl pointer-events-none" />
+              {loading ? (
+                /* Glowing Skeleton of the form area */
+                <div className="space-y-8 animate-pulse">
+                  {/* Photo area skeleton */}
+                  <div className="p-6 rounded-2xl border border-[#084848]/60 bg-[#022424]/10 space-y-4">
+                    <div className="h-4 w-24 bg-[#032e2e] rounded" />
+                    <div className="flex flex-col sm:flex-row items-center gap-6">
+                      <div className="w-24 h-24 rounded-full bg-[#032e2e]" />
+                      <div className="flex-1 space-y-3 w-full">
+                        <div className="h-10 w-36 bg-[#032e2e] rounded-xl" />
+                        <div className="h-3 w-full max-w-sm bg-[#032e2e] rounded" />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Fields skeletons */}
+                  <div className="space-y-6">
+                    <div className="h-6 w-36 bg-[#032e2e] rounded" />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="h-12 bg-[#032e2e] rounded-xl" />
+                      <div className="h-12 bg-[#032e2e] rounded-xl" />
+                      <div className="h-12 bg-[#032e2e] rounded-xl" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="h-12 bg-[#032e2e] rounded-xl" />
+                      <div className="h-12 bg-[#032e2e] rounded-xl" />
+                    </div>
+                    <div className="h-32 bg-[#032e2e] rounded-xl" />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* ── SKILLS TAB ─────────────────────────────────────────── */}
+                  {activeTab === 'skills' && (
+                    <SkillsSection
+                      profile={profile}
+                      onSkillsChange={handleSkillsChange}
+                    />
+                  )}
 
-              {/* PROFILE PHOTO SECTION (Above Basic Information) */}
+                  {/* ── PROJECTS TAB ────────────────────────────────────────── */}
+                  {activeTab === 'projects' && (
+                    <ProjectsSection
+                      profile={profile}
+                      onProjectsChange={handleProjectsChange}
+                    />
+                  )}
+
+                  {/* ── BASIC TAB CONTENT ─────────────────────────────────────── */}
+                  {activeTab === 'basic' && (
+                  <>
+              {/* PROFILE PHOTO SECTION */}
               <div className="p-6 rounded-2xl border border-[#084848] bg-[#022424]/10 backdrop-blur-sm space-y-4">
                 <h3 className="text-sm font-bold text-[#e2f1f1] uppercase tracking-wider">Profile Photo</h3>
                 
@@ -510,7 +548,7 @@ export default function ProfilePage() {
                 />
               </div>
 
-              {/* BASIC INFORMATION FORM */}
+              {/* ── BASIC INFORMATION FORM ───────────────────────────── */}
               <div className="space-y-8">
                 <div>
                   <h2 className="text-lg font-bold text-[#e2f1f1] flex items-center gap-2.5">
@@ -671,18 +709,17 @@ export default function ProfilePage() {
                       <ArrowRight size={14} />
                     </button>
                   </div>
+                 </div>
+               </div>
+              </>
+              )}
+            </>
+          )}
 
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </main>
-
+        </div>
       </div>
-    </div>
+    </main>
+  </div>
+</div>
   );
 }

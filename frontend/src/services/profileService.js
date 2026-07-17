@@ -47,11 +47,79 @@ export const calculateProfileCompletion = (profile) => {
   return Math.round(((filled + filledArr) / (fields.length + arrFields.length)) * 100);
 };
 
+/**
+ * Fetch the current user's skills array.
+ * @returns {Promise<Object>} Response data containing skills array
+ */
+export const getSkills = async () => {
+  const response = await api.get('/profile/me/skills');
+  return response.data;
+};
+
+/**
+ * Add a new skill to the authenticated user's profile.
+ * @param {Object} skillData - { skillName, category, level, experience: { value, unit } }
+ * @returns {Promise<Object>} Response data containing the updated profile
+ */
+export const addSkill = async (skillData) => {
+  const response = await api.post('/profile/me/skills', skillData);
+  return response.data;
+};
+
+/**
+ * Update an existing skill by its subdocument ID.
+ * @param {string} skillId - MongoDB ObjectId of the skill subdocument
+ * @param {Object} skillData - Updated skill fields
+ * @returns {Promise<Object>} Response data containing the updated profile
+ */
+export const updateSkill = async (skillId, skillData) => {
+  const response = await api.put(`/profile/me/skills/${skillId}`, skillData);
+  return response.data;
+};
+
+/**
+ * Delete a skill by its subdocument ID.
+ * @param {string} skillId - MongoDB ObjectId of the skill subdocument
+ * @returns {Promise<Object>} Response data containing the updated profile
+ */
+export const deleteSkill = async (skillId) => {
+  const response = await api.delete(`/profile/me/skills/${skillId}`);
+  return response.data;
+};
+
+export const getProjects = async () => {
+  const response = await api.get('/profile/me/projects');
+  return response.data;
+};
+
+export const addProject = async (projectData) => {
+  const response = await api.post('/profile/me/projects', projectData);
+  return response.data;
+};
+
+export const updateProject = async (projectId, projectData) => {
+  const response = await api.put(`/profile/me/projects/${projectId}`, projectData);
+  return response.data;
+};
+
+export const deleteProject = async (projectId) => {
+  const response = await api.delete(`/profile/me/projects/${projectId}`);
+  return response.data;
+};
+
 const profileService = {
   getMyProfile,
   createProfile,
   updateProfile,
   calculateProfileCompletion,
+  getSkills,
+  addSkill,
+  updateSkill,
+  deleteSkill,
+  getProjects,
+  addProject,
+  updateProject,
+  deleteProject,
   /**
    * Upload user avatar photo using multipart form data.
    * @param {File} file - Browser file object
@@ -71,6 +139,16 @@ const profileService = {
     const response = await api.delete('/profile/avatar');
     return response.data;
   },
+  /**
+   * Upload project thumbnail image using multipart form data.
+   */
+  uploadProjectThumbnail: async (file) => {
+    const formData = new FormData();
+    formData.append('thumbnail', file);
+    const response = await api.post('/profile/me/projects/thumbnail', formData);
+    return response.data;
+  },
 };
 
 export default profileService;
+

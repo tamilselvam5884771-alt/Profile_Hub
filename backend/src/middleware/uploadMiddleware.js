@@ -23,7 +23,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure Multer instances
+// Configure Multer instance for avatar
 const upload = multer({
   storage: storage,
   limits: {
@@ -31,6 +31,15 @@ const upload = multer({
   },
   fileFilter: fileFilter,
 }).single('avatar'); // Field name must match the frontend payload
+
+// Configure Multer instance for project thumbnail
+const uploadProject = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5 MB size limit
+  },
+  fileFilter: fileFilter,
+}).single('thumbnail'); // Field name must match the projects frontend payload
 
 /**
  * Express wrapper middleware to parse multer upload and handle its errors gracefully
@@ -52,6 +61,26 @@ const handleUpload = (req, res, next) => {
   });
 };
 
+/**
+ * Express wrapper middleware for project thumbnails
+ */
+const handleProjectThumbnailUpload = (req, res, next) => {
+  uploadProject(req, res, (err) => {
+    if (err) {
+      let errorMessage = err.message;
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        errorMessage = 'File is too large. Maximum allowed size is 5 MB.';
+      }
+      return res.status(400).json({
+        success: false,
+        message: errorMessage,
+      });
+    }
+    next();
+  });
+};
+
 module.exports = {
   handleUpload,
+  handleProjectThumbnailUpload,
 };

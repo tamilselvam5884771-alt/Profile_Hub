@@ -27,10 +27,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Welcome Route for health verification
-app.get('/', (req, res) => {
+app.get(['/', '/api', '/api/'], (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Welcome to the ProfileHub Authentication API!',
+    message: 'Welcome to the ProfileHub API!',
   });
 });
 
